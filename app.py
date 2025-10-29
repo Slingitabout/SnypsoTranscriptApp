@@ -5,6 +5,25 @@ import streamlit as st
 from yt_dlp import YoutubeDL
 import webvtt
 
+# --- Simple password gate (uses Streamlit Secrets: APP_PASSWORD) ---
+def check_password() -> bool:
+    """Return True if the user entered the correct password."""
+    if "auth_ok" in st.session_state and st.session_state.auth_ok:
+        return True
+
+    pw = st.text_input("Password", type="password", placeholder="Enter app password")
+    if st.button("Unlock"):
+        required = st.secrets.get("APP_PASSWORD", None)
+        if required is None:
+            st.error("Server is not configured yet. Admin must set APP_PASSWORD in Secrets.")
+            return False
+        if pw == required:
+            st.session_state.auth_ok = True
+            st.experimental_rerun()
+        else:
+            st.error("Incorrect password.")
+    return False
+
 # ---------- CONFIG ----------
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "transcripts")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -123,6 +142,11 @@ def save_transcript(video_url_or_id: str, base_name: str, include_timestamps: bo
 
 # ---------- UI ----------
 st.set_page_config(page_title="Snypso Transcript Extractor", page_icon="📝", layout="centered")
+
+# Require login before showing the app
+if not check_password():
+    st.stop()
+
 st.title("Snypso Transcript Extractor")
 st.caption(f"Output folder: {OUTPUT_DIR}")
 
@@ -180,5 +204,6 @@ if st.button("Run batch"):
         st.write("**Results:**")
         for row in results:
             st.write(row)
+
 
 
