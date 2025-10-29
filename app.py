@@ -8,7 +8,8 @@ import webvtt
 # --- Simple password gate (uses Streamlit Secrets: APP_PASSWORD) ---
 def check_password() -> bool:
     """Return True if the user entered the correct password."""
-    if "auth_ok" in st.session_state and st.session_state.auth_ok:
+    # Already authenticated?
+    if st.session_state.get("auth_ok"):
         return True
 
     pw = st.text_input("Password", type="password", placeholder="Enter app password")
@@ -17,11 +18,17 @@ def check_password() -> bool:
         if required is None:
             st.error("Server is not configured yet. Admin must set APP_PASSWORD in Secrets.")
             return False
+
         if pw == required:
             st.session_state.auth_ok = True
-            st.experimental_rerun()
+            # Rerun for a clean, unlocked state (supports new/old Streamlit)
+            if hasattr(st, "rerun"):
+                st.rerun()
+            else:
+                st.experimental_rerun()
         else:
             st.error("Incorrect password.")
+
     return False
 
 # ---------- CONFIG ----------
@@ -204,6 +211,7 @@ if st.button("Run batch"):
         st.write("**Results:**")
         for row in results:
             st.write(row)
+
 
 
 
