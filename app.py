@@ -6,7 +6,7 @@ from yt_dlp import YoutubeDL
 import webvtt
 
 # ---------- CONFIG ----------
-OUTPUT_DIR = r"C:\Users\matsl\Documents\8 Data Analyst\Code Projects\Snypso\Transcripts"
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "transcripts")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ---------- CORE HELPERS ----------
@@ -180,4 +180,5 @@ if st.button("Run batch"):
         st.write("**Results:**")
         for row in results:
             st.write(row)
+
 
