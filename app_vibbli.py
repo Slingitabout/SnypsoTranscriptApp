@@ -212,62 +212,81 @@ def summarize_transcript(text: str, model: str = "gpt-4o-mini"):
     return resp.choices[0].message.content.strip()
 
 # ---------- UI ----------
-st.set_page_config(page_title="Snypso Transcript Extractor", page_icon="📝", layout="centered")
+st.set_page_config(page_title="Vibbli", page_icon="📝", layout="centered")
 
 # Require login before showing the app
 if not check_password():
     st.stop()
 
-st.title("Snypso Transcript Extractor")
+st.title("Vibbli")
 st.caption(f"Output folder: {OUTPUT_DIR}")
 
 # ========= Vibbli panel: Search → Select → Extract → Summarize =========
 with st.expander("🔎 Vibbli: Search YouTube and extract transcripts"):
-    q = st.text_input("Search query", placeholder="e.g. 'LLM architecture explainer' or 'trend trading'")
-    k = st.slider("Results to show", 5, 25, 10, help="Top-N search results")
-    results = []
-    if st.button("Search"):
+    # --- Search controls ---
+    q = st.text_input(
+        "Search query",
+        placeholder="e.g. 'LLM architecture explainer' or 'Nick Radge trend trading'",
+        key="vibbli_q",
+    )
+    k = st.slider("Results to show", 5, 25, 10, help="Top-N search results", key="vibbli_k")
+
+    # Run search and store results in session to survive re-renders
+    if st.button("Search", key="vibbli_search_btn"):
         try:
-            results = yt_search(q, limit=k)
-            if not results:
-                st.info("No results.")
-            else:
-                st.success(f"Found {len(results)} videos.")
+            found = yt_search(q, limit=k) if q.strip() else []
+            st.session_state["vibbli_results"] = found
+            st.success(f"Found {len(found)} videos." if found else "No results.")
         except Exception as e:
+            st.session_state["vibbli_results"] = []
             st.error(f"Search error: {e}")
 
-     # --- Track selected videos persistently ---
-   if results:
-    st.write("Select videos to process:")
-    for i, r in enumerate(results, start=1):
-        col1, col2 = st.columns([7, 3])
-        with col1:
-            st.markdown(f"**{i}. {r['title']}**  \nChannel: {r['channel']}  \nURL: {r['url']}")
-        with col2:
-            sel_key = f"sel_{r['id']}"
-            # Let Streamlit manage state; just create the checkbox with a key.
-            # (Don't pass value=..., don't write to st.session_state[sel_key] here.)
-            st.checkbox("Select", key=sel_key)
+    results = st.session_state.get("vibbli_results", [])
 
-    # Collect selected items *after* rendering the checkboxes
-    selected = [r for r in results if st.session_state.get(f"sel_{r['id']}", False)]
+    # --- Selection list ---
+    if results:
+        st.write("Select videos to process:")
+        for i, r in enumerate(results, start=1):
+            col1, col2 = st.columns([7, 3])
+            with col1:
+                st.markdown(
+                    f"**{i}. {r['title']}**  \n"
+                    f"Channel: {r['channel']}  \n"
+                    f"URL: {r['url']}"
+                )
+            with col2:
+                sel_key = f"sel_{r['id']}"
+                # Do not assign to st.session_state here; let Streamlit manage it via key only.
+                st.checkbox("Select", key=sel_key)
 
-    if selected:
-        st.success(f"{len(selected)} video(s) selected.")
-        timestamps_for_selected = st.checkbox("Include timestamps in line-by-line file", value=False, key="ts_sel")
-        if st.button("Extract transcripts for selected", type="primary"):
-            for r in selected:
-                base = r["id"]
-                try:
-                    txt_path, para_path = save_transcript(r["url"], out_basename=base, timestamps=timestamps_for_selected)
-                    st.success(f"Saved: {os.path.basename(txt_path)} / {os.path.basename(para_path)}")
-                    with open(para_path, "r", encoding="utf-8") as f:
-                        preview = f.read(800)
-                    st.text(preview)
-                except Exception as e:
-                    st.error(f"{r['title']}: {e}")
+        selected = [r for r in results if st.session_state.get(f"sel_{r['id']}", False)]
+
+        if selected:
+            st.success(f"{len(selected)} video(s) selected.")
+            timestamps_for_selected = st.checkbox(
+                "Include timestamps in line-by-line file",
+                value=False,
+                key="ts_sel",
+            )
+            if st.button("Extract transcripts for selected", type="primary", key="extract_sel"):
+                for r in selected:
+                    base = r["id"]
+                    try:
+                        txt_path, para_path = save_transcript(
+                            r["url"],
+                            out_basename=base,
+                            timestamps=timestamps_for_selected,
+                        )
+                        st.success(f"Saved: {os.path.basename(txt_path)} / {os.path.basename(para_path)}")
+                        with open(para_path, "r", encoding="utf-8") as f:
+                            preview = f.read(800)
+                        st.text(preview)
+                    except Exception as e:
+                        st.error(f"{r['title']}: {e}")
+        else:
+            st.info("No videos selected yet.")
     else:
-        st.info("No videos selected yet.")
+        st.info("Run a search to see results.")
 
 
 with st.expander("🧠 Vibbli: Summarize a generated transcript"):
