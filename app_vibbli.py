@@ -273,7 +273,7 @@ with st.expander("🔎 Vibbli: Search YouTube and extract transcripts"):
                 for r in selected:
                     base = r["id"]
                     try:
-                        txt_path, para_path = save_transcript(
+                        txt_path, para_path, _ = save_transcript(
                             r["url"],
                             base_name=base,
                             timestamps=timestamps_for_selected,
