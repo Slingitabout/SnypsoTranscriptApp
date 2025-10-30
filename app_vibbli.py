@@ -119,7 +119,7 @@ def clean_lines(lines: list[str]) -> list[str]:
 def strip_timestamps(line: str) -> str:
     return re.sub(r"^\[\d{2}:\d{2}:\d{2}\]\s*", "", line).strip()
 
-def save_transcript(video_url_or_id: str, base_name: str, include_timestamps: bool) -> tuple[str, str, str]:
+def save_transcript(video_url_or_id: str, base_name: str = "transcript", timestamps: bool = False) -> tuple[str, str, str]:
     """
     End-to-end:
       - download VTT
@@ -134,7 +134,8 @@ def save_transcript(video_url_or_id: str, base_name: str, include_timestamps: bo
     base_name = os.path.splitext(os.path.basename(base_name))[0] or "transcript"
 
     vtt_path = download_vtt(video_url_or_id)
-    lines = vtt_to_lines(vtt_path, include_timestamps)
+    # use the new 'timestamps' flag here
+    lines = vtt_to_lines(vtt_path, timestamps)
     cleaned = clean_lines(lines)
 
     # Write TXT (line-by-line)
