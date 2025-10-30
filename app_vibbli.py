@@ -274,7 +274,7 @@ with st.expander("🔎 Vibbli: Search YouTube and extract transcripts"):
                     try:
                         txt_path, para_path = save_transcript(
                             r["url"],
-                            out_basename=base,
+                            base_name=base,
                             timestamps=timestamps_for_selected,
                         )
                         st.success(f"Saved: {os.path.basename(txt_path)} / {os.path.basename(para_path)}")
