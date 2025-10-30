@@ -6,7 +6,16 @@ from yt_dlp import YoutubeDL
 import webvtt
 
 from openai import OpenAI
-client = OpenAI()  # uses OPENAI_API_KEY from Streamlit Secrets
+
+def get_openai_client():
+    # create the client using Streamlit Secrets (or env as fallback)
+    key = st.secrets.get("OPENAI_API_KEY", None)
+    if not key:
+        import os
+        key = os.getenv("OPENAI_API_KEY")
+    if not key:
+        raise RuntimeError("OPENAI_API_KEY not set in Secrets or environment.")
+    return OpenAI(api_key=key)
 
 # --- Simple password gate (uses Streamlit Secrets: APP_PASSWORD) ---
 def check_password() -> bool:
@@ -189,6 +198,7 @@ Deliver:
 """
 
 def summarize_transcript(text: str, model: str = "gpt-4o-mini"):
+    client = get_openai_client() 
     # Truncate if extremely long (OpenAI token safety)
     snippet = text[:240000]
     resp = client.chat.completions.create(
