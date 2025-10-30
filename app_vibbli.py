@@ -223,7 +223,7 @@ st.caption(f"Output folder: {OUTPUT_DIR}")
 
 # ========= Vibbli panel: Search → Select → Extract → Summarize =========
 with st.expander("🔎 Vibbli: Search YouTube and extract transcripts"):
-    q = st.text_input("Search query", placeholder="e.g. 'LLM architecture explainer' or 'Nick Radge trend trading'")
+    q = st.text_input("Search query", placeholder="e.g. 'LLM architecture explainer' or 'trend trading'")
     k = st.slider("Results to show", 5, 25, 10, help="Top-N search results")
     results = []
     if st.button("Search"):
