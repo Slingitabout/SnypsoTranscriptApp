@@ -213,14 +213,25 @@ def summarize_transcript(text: str, model: str = "gpt-4o-mini"):
     return resp.choices[0].message.content.strip()
 
 # ---------- UI ----------
-st.set_page_config(page_title="Vibbli", page_icon="📝", layout="centered")
+from PIL import Image
+
+# Load icon
+icon = Image.open("Vibbli_icon_512.png")
+# Page config (favicon)
+st.set_page_config(page_title="Vibbli", page_icon=icon, layout="centered")
+# Replace title with logo
+st.markdown(
+    """
+    <div style='text-align: center; margin-bottom: 10px;'>
+        <img src='Vibbli_icon_512.png' width='160'>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Require login before showing the app
 if not check_password():
     st.stop()
-
-st.title("Vibbli")
-
 
 # ========= Vibbli panel: Search → Select → Extract → Summarize =========
 with st.expander("🔎 Vibbli: Search YouTube and extract transcripts"):
