@@ -224,12 +224,10 @@ st.set_page_config(page_title="Vibbli", page_icon=icon, layout="centered")
 if not check_password():
     st.stop()
 
-# Centered Vibbli logo instead of text title
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.image("Vibbli_icon_512.png", width=140)
-    st.markdown("**Your YouTube → Transcript → Summary assistant**")
-    st.markdown("---")
+# Left aligned Vibbli logo and tagline 
+st.image("Vibbli_icon_512.png", width=140)
+st.markdown("**Your YouTube → Transcript → Summary assistant**")
+st.markdown("---")
 
 # ========= Vibbli panel: Search → Select → Extract → Summarize =========
 with st.expander("Vibbli: Search YouTube and extract transcripts"):
