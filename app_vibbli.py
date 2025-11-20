@@ -219,22 +219,18 @@ from PIL import Image
 icon = Image.open("Vibbli_icon_512.png")
 # Page config (favicon)
 st.set_page_config(page_title="Vibbli", page_icon=icon, layout="centered")
-# Replace title with logo
-st.markdown(
-    """
-    <div style='text-align: center; margin-bottom: 10px;'>
-        <img src='Vibbli_icon_512.png' width='160'>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
 
 # Require login before showing the app
 if not check_password():
     st.stop()
 
+# Centered Vibbli logo instead of text title
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st.image("Vibbli_icon_512.png", width=160)
+
 # ========= Vibbli panel: Search → Select → Extract → Summarize =========
-with st.expander("🔎 Vibbli: Search YouTube and extract transcripts"):
+with st.expander("Vibbli: Search YouTube and extract transcripts"):
     # --- Search controls ---
     q = st.text_input(
         "Search query",
@@ -301,7 +297,7 @@ with st.expander("🔎 Vibbli: Search YouTube and extract transcripts"):
         st.info("Run a search to see results.")
 
 
-with st.expander("🧠 Vibbli: Summarize a generated transcript"):
+with st.expander("Vibbli: Summarize a generated transcript"):
     st.caption("Pick a previously generated *_paragraphs.txt file and Vibbli will produce structured notes.")
     para_files = [f for f in os.listdir(OUTPUT_DIR) if f.endswith("_paragraphs.txt")]
     if not para_files:
