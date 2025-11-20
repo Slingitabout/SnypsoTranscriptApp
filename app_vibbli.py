@@ -315,59 +315,107 @@ with st.expander("🧠 Vibbli: Summarize a generated transcript"):
             except Exception as e:
                 st.error(f"LLM error: {e}")
 
-# ========= Classic UI panel: Paste → Extract → Download =========
-url = st.text_input("YouTube URL or 11-char Video ID", placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX")
-base = st.text_input("Base filename (no extension)", value="transcript")
-timestamps = st.checkbox("Include [HH:MM:SS] timestamps", value=False)
+# ========= Classic Vibbli tools: direct URL & batch (no search) =========
+with st.expander("Vibbli: Extract transcript by directly pasting YouTube URLs"):
+    st.caption(
+        "Use this when you already know the YouTube link or video ID and don’t need the search function."
+    )
 
-if st.button("Download transcript", type="primary"):
-    if not url.strip():
-        st.error("Please paste a YouTube URL or video ID.")
-    else:
-        try:
-            txt_path, para_path, vtt_path = save_transcript(url.strip(), base.strip(), timestamps)
-            st.success("Done!")
-            st.write("**Saved files:**")
-            st.code(txt_path)
-            st.code(para_path)
-            st.code(vtt_path)
+    # --- Single video: direct URL / ID ---
+    st.subheader("Single video")
+    url = st.text_input(
+        "YouTube URL or 11-character Video ID",
+        placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX",
+        key="direct_url",
+    )
+    base = st.text_input(
+        "Base filename (no extension)",
+        value="transcript",
+        key="direct_base",
+    )
+    timestamps = st.checkbox(
+        "Include [HH:MM:SS] timestamps in line-by-line file",
+        value=False,
+        key="direct_ts",
+    )
 
-            # Preview first ~12 lines
-            st.write("**Preview (first ~12 lines):**")
-            with open(txt_path, "r", encoding="utf-8") as f:
-                preview = "".join([next(f, "") for _ in range(12)])
-            st.text(preview)
-
-            # Download buttons
-            with open(txt_path, "rb") as f:
-                st.download_button("Download line-by-line .txt", f.read(), file_name=os.path.basename(txt_path))
-            with open(para_path, "rb") as f:
-                st.download_button("Download paragraphs .txt", f.read(), file_name=os.path.basename(para_path))
-
-        except Exception as e:
-            st.error(f"{type(e).__name__}: {e}")
-
-# ---------- Batch mode ----------
-st.header("Batch mode")
-st.caption("Paste one URL/ID per line. Outputs will use the video ID as the base filename.")
-batch_input = st.text_area("URLs/IDs (one per line)", height=160, placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX")
-batch_ts = st.checkbox("Include timestamps in batch", value=False, key="batch_ts")
-
-if st.button("Run batch"):
-    entries = [ln.strip() for ln in batch_input.splitlines() if ln.strip()]
-    if not entries:
-        st.error("Please paste at least one URL/ID.")
-    else:
-        results = []
-        for item in entries:
-            # Heuristic base name = last 11 chars (YouTube ID)
-            vid = item[-11:]
+    if st.button("Download transcript", type="primary", key="direct_download"):
+        if not url.strip():
+            st.error("Please paste a YouTube URL or video ID.")
+        else:
             try:
-                txt_path, para_path, vtt_path = save_transcript(item, base_name=vid, include_timestamps=batch_ts)
-                results.append((item, "OK", txt_path, para_path))
-            except Exception as e:
-                results.append((item, f"ERROR: {e}", "", ""))
-        st.write("**Results:**")
-        for row in results:
-            st.write(row)
+                txt_path, para_path, vtt_path = save_transcript(
+                    url.strip(),
+                    base.strip(),
+                    timestamps,
+                )
+                st.success("Done!")
+                st.write("**Saved files:**")
+                st.code(txt_path)
+                st.code(para_path)
+                st.code(vtt_path)
 
+                # Preview first ~12 lines
+                st.write("**Preview (first ~12 lines):**")
+                with open(txt_path, "r", encoding="utf-8") as f:
+                    preview = "".join([next(f, "") for _ in range(12)])
+                st.text(preview)
+
+                # Download buttons
+                with open(txt_path, "rb") as f:
+                    st.download_button(
+                        "Download line-by-line .txt",
+                        f.read(),
+                        file_name=os.path.basename(txt_path),
+                    )
+                with open(para_path, "rb") as f:
+                    st.download_button(
+                        "Download paragraphs .txt",
+                        f.read(),
+                        file_name=os.path.basename(para_path),
+                    )
+
+            except Exception as e:
+                st.error(f"{type(e).__name__}: {e}")
+
+    st.markdown("---")
+
+    # --- Batch mode: multiple URLs / IDs ---
+    st.subheader("Batch mode")
+    st.caption(
+        "Paste one URL or video ID per line. The app will use the video ID as the base filename."
+    )
+    batch_input = st.text_area(
+        "URLs/IDs (one per line)",
+        height=160,
+        placeholder="https://www.youtube.com/watch?v=XXXXXXXXXXX",
+        key="batch_input",
+    )
+    batch_ts = st.checkbox(
+        "Include timestamps in batch line-by-line files",
+        value=False,
+        key="batch_ts",
+    )
+
+    if st.button("Run batch", key="run_batch"):
+        entries = [ln.strip() for ln in batch_input.splitlines() if ln.strip()]
+        if not entries:
+            st.error("Please paste at least one URL/ID.")
+        else:
+            results = []
+            for item in entries:
+                # Heuristic base name = last 11 chars (YouTube ID)
+                vid = item[-11:]
+                try:
+                    txt_path, para_path, vtt_path = save_transcript(
+                        item,
+                        base_name=vid,
+                        timestamps=batch_ts,   # NOTE: uses the correct parameter name
+                    )
+                    results.append((item, "OK", txt_path, para_path))
+                except Exception as e:
+                    results.append((item, f"ERROR: {e}", "", ""))
+
+            st.write("**Results:**")
+            for row in results:
+                st.write(row)
