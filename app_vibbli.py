@@ -220,7 +220,7 @@ if not check_password():
     st.stop()
 
 st.title("Vibbli")
-st.caption(f"Output folder: {OUTPUT_DIR}")
+
 
 # ========= Vibbli panel: Search → Select → Extract → Summarize =========
 with st.expander("🔎 Vibbli: Search YouTube and extract transcripts"):
